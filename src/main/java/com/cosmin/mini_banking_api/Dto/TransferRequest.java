@@ -11,6 +11,7 @@ public record TransferRequest(
         @NotBlank
         String toUsername,
 
+        @NotNull
         @Positive
         Integer toAccountNumber,
 

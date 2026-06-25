@@ -19,7 +19,7 @@ public class AccountController {
     }
 
     @GetMapping("/{account_number}")
-    public AccountResponse getAccountS(@PathVariable Integer account_number){
+    public AccountResponse getAccount(@PathVariable Integer account_number){
       return accountService.getAccount(account_number);
     }
 
