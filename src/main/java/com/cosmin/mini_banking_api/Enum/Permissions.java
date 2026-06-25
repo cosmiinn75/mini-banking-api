@@ -6,5 +6,6 @@ public enum Permissions {
     READ_TRANSACTIONS,
     READ_ACCOUNTS,
     READ_ALL_USERS_ACCOUNTS,
-    UPDATE_ROLE
+    UPDATE_ROLE,
+    READ_ALL_USERS
 }

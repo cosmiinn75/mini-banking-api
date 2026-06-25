@@ -2,6 +2,9 @@ package com.cosmin.mini_banking_api.Service;
 
 import com.cosmin.mini_banking_api.Dto.*;
 import com.cosmin.mini_banking_api.Enum.TransactionType;
+import com.cosmin.mini_banking_api.Exception.AccountNotFoundException;
+import com.cosmin.mini_banking_api.Exception.CantTransferToOwnAccountException;
+import com.cosmin.mini_banking_api.Exception.InsufficientFundsException;
 import com.cosmin.mini_banking_api.Model.BankAccount;
 import com.cosmin.mini_banking_api.Model.Transaction;
 import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
@@ -27,8 +30,8 @@ public class TransactionService {
     @Transactional
     public DepositResponse deposit(Integer account_number, DepositRequest request){
         String currentUsername = getCurrentUsername();
-        BankAccount account = accountRepository.findByUserUsernameAndAccount_number(currentUsername,account_number)
-                .orElseThrow(() -> new RuntimeException("Account doesn't exist"));
+        BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(currentUsername,account_number)
+                .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
         BigDecimal amount = request.amount();
         account.setBalance(account.getBalance().add(amount));
         Transaction transaction = new Transaction();
@@ -37,17 +40,17 @@ public class TransactionService {
         transaction.setTransactionType(TransactionType.DEPOSIT);
         transactionRepository.save(transaction);
         accountRepository.save(account);
-        return new DepositResponse(account.getAccount_number(),account.getName(),account.getBalance());
+        return new DepositResponse(account.getAccountNumber(),account.getName(),account.getBalance());
     }
 
     @Transactional
     public WithdrawalResponse withdrawal(Integer account_number, WithdrawalRequest request){
         String currentUsername = getCurrentUsername();
-        BankAccount account = accountRepository.findByUserUsernameAndAccount_number(currentUsername,account_number)
-                .orElseThrow(() -> new RuntimeException("Account doesn't exist"));
+        BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(currentUsername,account_number)
+                .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
         BigDecimal balance = account.getBalance();
         if(balance.compareTo(request.amount()) < 0){
-            throw new RuntimeException("Insufficient funds");
+            throw new InsufficientFundsException("Insufficient funds");
         }
         account.setBalance(balance.subtract(request.amount()));
         Transaction transaction = new Transaction();
@@ -56,14 +59,14 @@ public class TransactionService {
         transaction.setBankAccount(account);
         transactionRepository.save(transaction);
         accountRepository.save(account);
-        return new WithdrawalResponse(account.getAccount_number(),account.getName(),account.getBalance());
+        return new WithdrawalResponse(account.getAccountNumber(),account.getName(),account.getBalance());
     }
 
 
     public List<TransactionResponse> getAllTransactions(Integer account_number){
         BankAccount account = accountRepository
-                .findByUserUsernameAndAccount_number(getCurrentUsername(),account_number)
-                .orElseThrow(() -> new RuntimeException("Account doesn't exist"));
+                .findByUserUsernameAndAccountNumber(getCurrentUsername(),account_number)
+                .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
         return transactionRepository.findByBankAccountOrderByCreatedAtDesc(account)
                 .stream()
                 .map(this::fromTransactionToResponse)
@@ -77,20 +80,20 @@ public class TransactionService {
         String currentUsername = getCurrentUsername();
         BigDecimal amount = request.amount();
 
-        BankAccount account = accountRepository.findByUserUsernameAndAccount_number(currentUsername, account_number)
-                .orElseThrow(() -> new RuntimeException("Account doesn't exist"));
+        BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(currentUsername, account_number)
+                .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
 
-        BankAccount toAccount = accountRepository.findByUserUsernameAndAccount_number(request.toUsername(), request.toAccountNumber())
-                .orElseThrow(() -> new RuntimeException("Destination account doesn't exist"));
+        BankAccount toAccount = accountRepository.findByUserUsernameAndAccountNumber(request.toUsername(), request.toAccountNumber())
+                .orElseThrow(() -> new AccountNotFoundException("Destination account doesn't exist"));
 
         if(currentUsername.equals(request.toUsername()) &&
         account_number.equals(request.toAccountNumber()))
         {
-            throw new RuntimeException("Cannot transfer to the same account");
+            throw new CantTransferToOwnAccountException("Cannot transfer to the same account");
         }
 
         if (account.getBalance().compareTo(amount) < 0) {
-            throw new RuntimeException("Insufficient funds");
+            throw new InsufficientFundsException("Insufficient funds");
         }
 
         account.setBalance(account.getBalance().subtract(amount));
@@ -114,12 +117,12 @@ public class TransactionService {
 
         return new TransferResponse(
                 currentUsername,
-                account.getAccount_number(),
+                account.getAccountNumber(),
                 account.getName(),
                 account.getBalance(),
 
                 request.toUsername(),
-                toAccount.getAccount_number(),
+                toAccount.getAccountNumber(),
                 toAccount.getName(),
                 toAccount.getBalance(),
 
@@ -139,7 +142,7 @@ public class TransactionService {
 
         return new TransactionResponse(
                 transaction.getId(),
-                account.getAccount_number(),
+                account.getAccountNumber(),
                 account.getName(),
                 transaction.getTransactionType(),
                 transaction.getAmount(),

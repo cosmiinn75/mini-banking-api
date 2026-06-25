@@ -15,7 +15,8 @@ public enum Role {
             Permissions.MAKE_TRANSACTIONS,
             Permissions.READ_TRANSACTIONS,
             Permissions.READ_ALL_USERS_ACCOUNTS,
-            Permissions.UPDATE_ROLE
+            Permissions.UPDATE_ROLE,
+            Permissions.READ_ALL_USERS
     ));
 
     private final List<Permissions> permissionsList;

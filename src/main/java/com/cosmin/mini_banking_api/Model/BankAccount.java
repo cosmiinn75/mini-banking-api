@@ -17,7 +17,7 @@ public class BankAccount {
 
     private BigDecimal balance;
 
-    private Integer account_number;
+    private Integer accountNumber;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -28,16 +28,16 @@ public class BankAccount {
         this.id = id;
         this.name = name;
         this.balance = sold;
-        this.account_number = account_number;
+        this.accountNumber = account_number;
         this.user = user;
     }
 
-    public Integer getAccount_number() {
-        return account_number;
+    public Integer getAccountNumber() {
+        return accountNumber;
     }
 
-    public void setAccount_number(Integer account_number) {
-        this.account_number = account_number;
+    public void setAccountNumber(Integer account_number) {
+        this.accountNumber = account_number;
     }
 
     public String getName() {

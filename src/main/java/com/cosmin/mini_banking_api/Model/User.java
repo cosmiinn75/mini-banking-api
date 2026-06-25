@@ -17,7 +17,7 @@ public class User {
 
     private String password;
 
-    private Integer number_of_accounts;
+    private Integer number_of_accounts = 1;
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.CUSTOMER;

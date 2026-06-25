@@ -1,5 +1,8 @@
 package com.cosmin.mini_banking_api.Service;
 
+import com.cosmin.mini_banking_api.Exception.InvalidCredentialsException;
+import com.cosmin.mini_banking_api.Exception.UserNotFoundException;
+import com.cosmin.mini_banking_api.Exception.UsernameAlreadyExistsException;
 import com.cosmin.mini_banking_api.Model.BankAccount;
 import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
 import com.cosmin.mini_banking_api.Dto.AccountRequest;
@@ -32,8 +35,8 @@ public class AccountService {
     }
 
     public AccountResponse getAccount(Integer account_number){
-        BankAccount account = accountRepository.findByUserUsernameAndAccount_number(getCurrentUsername(),account_number)
-                .orElseThrow(() -> new RuntimeException("Account doesn't exist"));
+        BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(getCurrentUsername(),account_number)
+                .orElseThrow(() -> new UserNotFoundException("Account doesn't exist"));
         return fromAccountToResponse(account);
     }
 
@@ -41,12 +44,12 @@ public class AccountService {
     public AccountResponse createAccount(AccountRequest request){
         String username = getCurrentUsername();
         User currentUser =  userRepository.findByUsername(username).
-                orElseThrow(() -> new RuntimeException("Invalid username")); // Invalid username
+                orElseThrow(() -> new InvalidCredentialsException("Invalid username")); // Invalid username
 
         String account_name = request.name();
 
         if(accountRepository.existsByUserUsernameAndName(username,account_name)){
-            throw new RuntimeException("Account name already exists");
+            throw new UsernameAlreadyExistsException("Account name already exists");
         }
 
         Integer number_of_accounts = currentUser.getNumber_of_accounts();
@@ -55,7 +58,7 @@ public class AccountService {
         account.setBalance(BigDecimal.ZERO);
         account.setUser(currentUser);
         account.setName(account_name);
-        account.setAccount_number(number_of_accounts+1);
+        account.setAccountNumber(number_of_accounts+1);
 
         currentUser.setNumber_of_accounts(number_of_accounts+1);
 
@@ -63,14 +66,15 @@ public class AccountService {
 
         accountRepository.save(account);
 
-        return new AccountResponse(number_of_accounts+1,account_name, account.getBalance());
+        return new AccountResponse(username,number_of_accounts+1,account_name, account.getBalance());
     }
 
     private String getCurrentUsername(){
         return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 
-    private AccountResponse fromAccountToResponse(BankAccount account){
-        return new AccountResponse(account.getAccount_number(),account.getName(),account.getBalance());
+
+    public AccountResponse fromAccountToResponse(BankAccount account){
+        return new AccountResponse(account.getUser().getUsername(),account.getAccountNumber(),account.getName(),account.getBalance());
     }
 }

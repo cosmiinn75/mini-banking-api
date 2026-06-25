@@ -69,6 +69,9 @@ public class SecurityConfig {
                         .hasAuthority(Permissions.MAKE_TRANSACTIONS.name())
 
 
+                        .requestMatchers(HttpMethod.GET,"/api/admin/users")
+                        .hasAuthority(Permissions.READ_ALL_USERS.name())
+
                         .requestMatchers(HttpMethod.GET, "/api/admin/accounts")
                         .hasAuthority(Permissions.READ_ALL_USERS_ACCOUNTS.name())
 

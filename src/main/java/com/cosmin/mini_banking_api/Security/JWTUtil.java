@@ -17,7 +17,11 @@ public class JWTUtil {
     @Value("${jwt.secret}")
     private String SECRET_KEY;
 
-    private final Key key = Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+
+
+    private Key getSigningKey(){
+        return Keys.hmacShaKeyFor(SECRET_KEY.getBytes());
+    }
 
     public String generateToken(String username, Role role){
         return Jwts.builder()
@@ -25,7 +29,7 @@ public class JWTUtil {
                 .claim("role" , role.name())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000*60*60*10))
-                .signWith(key, SignatureAlgorithm.HS256)
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
@@ -52,7 +56,7 @@ public class JWTUtil {
 
     public Claims extractAllClaims(String token){
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();

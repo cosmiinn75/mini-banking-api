@@ -2,6 +2,9 @@ package com.cosmin.mini_banking_api.Service;
 
 import com.cosmin.mini_banking_api.Dto.*;
 import com.cosmin.mini_banking_api.Enum.Role;
+import com.cosmin.mini_banking_api.Exception.EmailAlreadyExistsException;
+import com.cosmin.mini_banking_api.Exception.InvalidCredentialsException;
+import com.cosmin.mini_banking_api.Exception.UsernameAlreadyExistsException;
 import com.cosmin.mini_banking_api.Model.BankAccount;
 import com.cosmin.mini_banking_api.Model.User;
 import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
@@ -31,10 +34,10 @@ public class AuthService {
 
     public AuthResponse loginUser(LoginRequest request){
         User user = userRepository.findByUsername(request.username())
-                .orElseThrow(() -> new RuntimeException("Invalid username or password"));
+                .orElseThrow(() -> new InvalidCredentialsException("Invalid username or password"));
 
         if(!passwordEncoder.matches(request.password(), user.getPassword())) {
-            throw new RuntimeException("Invalid username or password");
+            throw new InvalidCredentialsException("Invalid username or password");
         }
 
         return new AuthResponse(jwtUtil.generateToken(user.getUsername(), user.getRole()));
@@ -45,11 +48,11 @@ public class AuthService {
         Optional<User> user = userRepository.findByUsername(request.username());
 
         if(user.isPresent()) {
-            throw new RuntimeException("Username already exists");
+            throw new UsernameAlreadyExistsException("Username already exists");
         }
 
         if(userRepository.existsByEmail(request.email())){
-            throw new RuntimeException("Email already exists");
+            throw new EmailAlreadyExistsException("Email already exists");
         }
 
         User currentUser = new User();
@@ -65,7 +68,7 @@ public class AuthService {
         bankAccount.setBalance(BigDecimal.ZERO);
         bankAccount.setUser(savedUser);
         bankAccount.setName("Main Account");
-        bankAccount.setAccount_number(1);
+        bankAccount.setAccountNumber(1);
 
         accountRepository.save(bankAccount);
         return new AuthResponse(jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole()));
