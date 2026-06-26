@@ -141,7 +141,6 @@ public class TransactionService {
         BankAccount account = transaction.getBankAccount();
 
         return new TransactionResponse(
-                transaction.getId(),
                 account.getAccountNumber(),
                 account.getName(),
                 transaction.getTransactionType(),
