@@ -86,6 +86,15 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.CONFLICT);
 
     }
+    @ExceptionHandler(AccountNameAlreadyExistsException.class)
+    public ResponseEntity<Map<String,String >> accountNameAlreadyExistsHandler(AccountNameAlreadyExistsException e){
+        Map<String,String> response = new HashMap<>();
+
+        response.put("error" , "Conflict");
+        response.put("message" , e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+
+    }
 
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<Map<String,String >> userNotFoundHandler(UserNotFoundException e){

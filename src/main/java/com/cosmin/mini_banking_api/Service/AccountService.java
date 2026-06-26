@@ -1,8 +1,6 @@
 package com.cosmin.mini_banking_api.Service;
 
-import com.cosmin.mini_banking_api.Exception.InvalidCredentialsException;
-import com.cosmin.mini_banking_api.Exception.UserNotFoundException;
-import com.cosmin.mini_banking_api.Exception.UsernameAlreadyExistsException;
+import com.cosmin.mini_banking_api.Exception.*;
 import com.cosmin.mini_banking_api.Model.BankAccount;
 import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
 import com.cosmin.mini_banking_api.Dto.AccountRequest;
@@ -36,7 +34,7 @@ public class AccountService {
 
     public AccountResponse getAccount(Integer account_number){
         BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(getCurrentUsername(),account_number)
-                .orElseThrow(() -> new UserNotFoundException("Account doesn't exist"));
+                .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
         return fromAccountToResponse(account);
     }
 
@@ -49,7 +47,7 @@ public class AccountService {
         String account_name = request.name();
 
         if(accountRepository.existsByUserUsernameAndName(username,account_name)){
-            throw new UsernameAlreadyExistsException("Account name already exists");
+            throw new AccountNameAlreadyExistsException("Account name already exists");
         }
 
         Integer number_of_accounts = currentUser.getNumber_of_accounts();

@@ -28,9 +28,9 @@ public class TransactionService {
     }
 
     @Transactional
-    public DepositResponse deposit(Integer account_number, DepositRequest request){
+    public DepositResponse deposit(Integer account_number, DepositRequest request) {
         String currentUsername = getCurrentUsername();
-        BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(currentUsername,account_number)
+        BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(currentUsername, account_number)
                 .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
         BigDecimal amount = request.amount();
         account.setBalance(account.getBalance().add(amount));
@@ -40,7 +40,7 @@ public class TransactionService {
         transaction.setTransactionType(TransactionType.DEPOSIT);
         transactionRepository.save(transaction);
         accountRepository.save(account);
-        return new DepositResponse(account.getAccountNumber(),account.getName(),account.getBalance());
+        return new DepositResponse(account.getAccountNumber(), account.getName(), account.getBalance());
     }
 
     @Transactional
