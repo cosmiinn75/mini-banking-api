@@ -2,6 +2,7 @@ package com.cosmin.mini_banking_api.Service;
 
 import com.cosmin.mini_banking_api.Dto.AccountResponse;
 import com.cosmin.mini_banking_api.Dto.ChangeRoleRequest;
+import com.cosmin.mini_banking_api.Dto.StatsResponse;
 import com.cosmin.mini_banking_api.Dto.UserResponse;
 import com.cosmin.mini_banking_api.Enum.Role;
 import com.cosmin.mini_banking_api.Exception.NotAdminException;
@@ -41,6 +42,11 @@ public class AdminService {
         return accountRepository.findAll().stream()
                 .map(accountService::fromAccountToResponse)
                 .toList();
+    }
+
+    public List<StatsResponse> getUsersStats(){
+        authUser();
+        return userRepository.getUsersStats();
     }
 
     @Transactional

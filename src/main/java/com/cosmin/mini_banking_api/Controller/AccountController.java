@@ -2,6 +2,7 @@ package com.cosmin.mini_banking_api.Controller;
 
 import com.cosmin.mini_banking_api.Dto.AccountRequest;
 import com.cosmin.mini_banking_api.Dto.AccountResponse;
+import com.cosmin.mini_banking_api.Dto.UpdateRequest;
 import com.cosmin.mini_banking_api.Service.AccountService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,13 @@ public class AccountController {
     @PostMapping
     public AccountResponse createAccount(@Valid @RequestBody AccountRequest accountRequest){
         return accountService.createAccount(accountRequest);
+    }
+
+
+    @PutMapping("/{accountNumber}")
+    public AccountResponse updateAccount(@PathVariable Integer accountNumber , @Valid @RequestBody UpdateRequest request){
+
+        return accountService.updateAccountName(accountNumber,request);
     }
 
 

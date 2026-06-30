@@ -69,6 +69,7 @@ public class AuthService {
         bankAccount.setUser(savedUser);
         bankAccount.setName("Main Account");
         bankAccount.setAccountNumber(1);
+        bankAccount.setActive(true);
 
         accountRepository.save(bankAccount);
         return new AuthResponse(jwtUtil.generateToken(savedUser.getUsername(), savedUser.getRole()));

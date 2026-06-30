@@ -2,6 +2,7 @@ package com.cosmin.mini_banking_api.Controller;
 
 import com.cosmin.mini_banking_api.Dto.AccountResponse;
 import com.cosmin.mini_banking_api.Dto.ChangeRoleRequest;
+import com.cosmin.mini_banking_api.Dto.StatsResponse;
 import com.cosmin.mini_banking_api.Dto.UserResponse;
 import com.cosmin.mini_banking_api.Service.AdminService;
 import jakarta.validation.Valid;
@@ -28,6 +29,12 @@ public class AdminController {
     @GetMapping("/accounts")
     public List<AccountResponse> getAllAccounts(){
         return adminService.getAllAccounts();
+    }
+
+
+    @GetMapping("/users/stats")
+    public List<StatsResponse> getUsersStats(){
+        return adminService.getUsersStats();
     }
 
     @PutMapping("/users/{id}/role")

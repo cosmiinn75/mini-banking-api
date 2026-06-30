@@ -47,6 +47,7 @@ public class AccountServiceTest {
     }
 
 
+
     @Test
     void createAccount_shouldCreateAccountForAuthenticatedUser() {
         mockAuthenticatedUser("cosmin");
@@ -107,6 +108,7 @@ public class AccountServiceTest {
         verifyNoInteractions(accountRepository);
 
     }
+
 
     @Test
     void getAllAccounts_shouldReturnAccountsForAuthenticatedUser(){

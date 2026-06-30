@@ -6,6 +6,7 @@ public record AccountResponse(
         String username,
         Integer accountNumber,
         String name,
-        BigDecimal balance
+        BigDecimal balance,
+        boolean isActive
 ) {
 }

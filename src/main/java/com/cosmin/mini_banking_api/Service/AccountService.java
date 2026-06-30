@@ -1,5 +1,7 @@
 package com.cosmin.mini_banking_api.Service;
 
+import com.cosmin.mini_banking_api.Dto.DeleteResponse;
+import com.cosmin.mini_banking_api.Dto.UpdateRequest;
 import com.cosmin.mini_banking_api.Exception.*;
 import com.cosmin.mini_banking_api.Model.BankAccount;
 import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
@@ -35,6 +37,11 @@ public class AccountService {
     public AccountResponse getAccount(Integer account_number){
         BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(getCurrentUsername(),account_number)
                 .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
+
+        if (!account.isActive()) {
+            throw new AccountNotActiveException("Account not active");
+        }
+
         return fromAccountToResponse(account);
     }
 
@@ -57,6 +64,7 @@ public class AccountService {
         account.setUser(currentUser);
         account.setName(account_name);
         account.setAccountNumber(number_of_accounts+1);
+        account.setActive(true);
 
         currentUser.setNumber_of_accounts(number_of_accounts+1);
 
@@ -64,7 +72,47 @@ public class AccountService {
 
         accountRepository.save(account);
 
-        return new AccountResponse(username,number_of_accounts+1,account_name, account.getBalance());
+        return new AccountResponse(username,number_of_accounts+1,account_name, account.getBalance(),account.isActive());
+    }
+
+
+    @Transactional
+    public DeleteResponse deleteAccount(Integer accountNumber){
+
+        BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(getCurrentUsername(),accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        if(!account.isActive()) {
+            throw new AccountNotActiveException("Account not active");
+        }
+
+        if(account.getBalance().compareTo(BigDecimal.ZERO) >0 ){
+            throw new PositiveBalanceException("Balance must be 0 to close account");
+        }
+        account.setActive(false);
+        accountRepository.save(account);
+
+        return new DeleteResponse("Account closed successfully");
+    }
+
+
+    @Transactional
+    public AccountResponse updateAccountName(Integer accountNumber , UpdateRequest request){
+
+        BankAccount accountToUpdate = accountRepository.findByUserUsernameAndAccountNumber(getCurrentUsername(),accountNumber)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        if(!accountToUpdate.isActive()) {
+            throw new AccountNotActiveException("Account not active");
+        }
+
+        if(!accountToUpdate.getName().equals(request.newName()) &&
+        accountRepository.existsByUserUsernameAndName(getCurrentUsername(), request.newName())) {
+            throw new AccountNameAlreadyExistsException("Account name already exists");
+        }
+        accountToUpdate.setName(request.newName());
+        accountRepository.save(accountToUpdate);
+        return fromAccountToResponse(accountToUpdate);
     }
 
     private String getCurrentUsername(){
@@ -73,6 +121,12 @@ public class AccountService {
 
 
     public AccountResponse fromAccountToResponse(BankAccount account){
-        return new AccountResponse(account.getUser().getUsername(),account.getAccountNumber(),account.getName(),account.getBalance());
+        return new AccountResponse(account.getUser().getUsername(),account.getAccountNumber(),account.getName(),account.getBalance(),account.isActive());
     }
+
+
+
+
+
+
 }

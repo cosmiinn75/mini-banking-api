@@ -2,6 +2,7 @@ package com.cosmin.mini_banking_api.Service;
 
 import com.cosmin.mini_banking_api.Dto.*;
 import com.cosmin.mini_banking_api.Enum.TransactionType;
+import com.cosmin.mini_banking_api.Exception.AccountNotActiveException;
 import com.cosmin.mini_banking_api.Exception.AccountNotFoundException;
 import com.cosmin.mini_banking_api.Exception.CantTransferToOwnAccountException;
 import com.cosmin.mini_banking_api.Exception.InsufficientFundsException;
@@ -32,6 +33,11 @@ public class TransactionService {
         String currentUsername = getCurrentUsername();
         BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(currentUsername, account_number)
                 .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
+
+        if(!account.isActive()) {
+            throw new AccountNotActiveException("Account is not active");
+        }
+
         BigDecimal amount = request.amount();
         account.setBalance(account.getBalance().add(amount));
         Transaction transaction = new Transaction();
@@ -48,10 +54,16 @@ public class TransactionService {
         String currentUsername = getCurrentUsername();
         BankAccount account = accountRepository.findByUserUsernameAndAccountNumber(currentUsername,account_number)
                 .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
+
+        if(!account.isActive()) {
+            throw new AccountNotActiveException("Account is not active");
+        }
+
         BigDecimal balance = account.getBalance();
         if(balance.compareTo(request.amount()) < 0){
             throw new InsufficientFundsException("Insufficient funds");
         }
+
         account.setBalance(balance.subtract(request.amount()));
         Transaction transaction = new Transaction();
         transaction.setTransactionType(TransactionType.WITHDRAWAL);
@@ -63,11 +75,11 @@ public class TransactionService {
     }
 
 
-    public List<TransactionResponse> getAllTransactions(Integer account_number){
+    public List<TransactionResponse> getAllTransactions(Integer account_number,TransactionType type ,BigDecimal minAmount){
         BankAccount account = accountRepository
                 .findByUserUsernameAndAccountNumber(getCurrentUsername(),account_number)
                 .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
-        return transactionRepository.findByBankAccountOrderByCreatedAtDesc(account)
+        return transactionRepository.findFilteredTransactions(account,type,minAmount)
                 .stream()
                 .map(this::fromTransactionToResponse)
                 .toList();
@@ -86,10 +98,16 @@ public class TransactionService {
         BankAccount toAccount = accountRepository.findByUserUsernameAndAccountNumber(request.toUsername(), request.toAccountNumber())
                 .orElseThrow(() -> new AccountNotFoundException("Destination account doesn't exist"));
 
+
+
+
         if(currentUsername.equals(request.toUsername()) &&
         account_number.equals(request.toAccountNumber()))
         {
             throw new CantTransferToOwnAccountException("Cannot transfer to the same account");
+        }
+        if(!account.isActive() || !toAccount.isActive()){
+            throw new AccountNotActiveException("Account is not active");
         }
 
         if (account.getBalance().compareTo(amount) < 0) {

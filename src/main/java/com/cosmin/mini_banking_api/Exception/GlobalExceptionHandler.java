@@ -105,6 +105,28 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 
     }
+
+    @ExceptionHandler(PositiveBalanceException.class)
+    public ResponseEntity<Map<String,String >> positiveBalanceHandler(PositiveBalanceException e){
+        Map<String,String> response = new HashMap<>();
+
+        response.put("error" , "Bad request");
+        response.put("message" , e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+    }
+
+
+    @ExceptionHandler(AccountNotActiveException.class)
+    public ResponseEntity<Map<String,String >> accountNotActiveHandler(AccountNotActiveException e){
+        Map<String,String> response = new HashMap<>();
+
+        response.put("error" , "Bad request");
+        response.put("message" , e.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String,String>> exceptionHandle(Exception e){
         Map<String ,String > response = new HashMap<>();
@@ -125,5 +147,9 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(response,HttpStatus.BAD_REQUEST);
     }
+
+
+
+
 
 }

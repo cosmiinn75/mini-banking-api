@@ -19,9 +19,12 @@ public class BankAccount {
 
     private Integer accountNumber;
 
+    private boolean isActive = true;
+
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
+
 
 
     public BankAccount(Long id, String name, BigDecimal sold, Integer account_number, User user) {
@@ -30,6 +33,13 @@ public class BankAccount {
         this.balance = sold;
         this.accountNumber = account_number;
         this.user = user;
+    }
+    public boolean isActive() {
+        return isActive;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
     public Integer getAccountNumber() {
