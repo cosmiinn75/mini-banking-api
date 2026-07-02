@@ -45,6 +45,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
 
+                        .requestMatchers("/v3/api-docs/**",
+                                            "/swagger-ui/**",
+                                                "/swagger-ui.html",
+                               "/swagger-ui/index.html" )
+                        .permitAll()
+
                         // ACCOUNTS
                         .requestMatchers(HttpMethod.POST, "/api/accounts")
                         .hasAuthority(Permissions.MAKE_ACCOUNTS.name())

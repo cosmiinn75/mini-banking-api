@@ -60,7 +60,7 @@ public class AuthService {
         currentUser.setPassword(passwordEncoder.encode(request.password()));
         currentUser.setRole(Role.CUSTOMER);
         currentUser.setUsername(request.username());
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
 
         User savedUser = userRepository.save(currentUser);
 

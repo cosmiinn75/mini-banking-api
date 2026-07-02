@@ -41,5 +41,7 @@ public interface UserRepository extends JpaRepository<User,Long> {
                 """
     )
     List<StatsResponse> getUsersStats();
+
+
     boolean existsByEmail(String email);
 }

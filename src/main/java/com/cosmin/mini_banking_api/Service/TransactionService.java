@@ -11,6 +11,9 @@ import com.cosmin.mini_banking_api.Model.Transaction;
 import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
 import com.cosmin.mini_banking_api.Repository.TransactionRepository;
 import jakarta.transaction.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -75,14 +78,16 @@ public class TransactionService {
     }
 
 
-    public List<TransactionResponse> getAllTransactions(Integer account_number,TransactionType type ,BigDecimal minAmount){
+    public PagedResponse<TransactionResponse> getAllTransactions(Integer account_number, TransactionType type , BigDecimal minAmount, Integer pageNumber , Integer pageSize){
         BankAccount account = accountRepository
                 .findByUserUsernameAndAccountNumber(getCurrentUsername(),account_number)
                 .orElseThrow(() -> new AccountNotFoundException("Account doesn't exist"));
-        return transactionRepository.findFilteredTransactions(account,type,minAmount)
-                .stream()
-                .map(this::fromTransactionToResponse)
-                .toList();
+
+        Pageable pageable = PageRequest.of(pageNumber,pageSize);
+
+        Page<TransactionResponse> page = transactionRepository.findFilteredTransactions(account,type,minAmount,pageable)
+                .map(this::fromTransactionToResponse);
+        return PagedResponse.from(page);
     }
 
 

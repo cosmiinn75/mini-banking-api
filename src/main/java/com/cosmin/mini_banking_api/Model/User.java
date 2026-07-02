@@ -17,7 +17,7 @@ public class User {
 
     private String password;
 
-    private Integer number_of_accounts = 1;
+    private Integer numberOfAccounts = 1;
 
     @Enumerated(EnumType.STRING)
     private Role role = Role.CUSTOMER;
@@ -32,12 +32,12 @@ public class User {
         this.username = username;
     }
 
-    public Integer getNumber_of_accounts() {
-        return number_of_accounts;
+    public Integer getNumberOfAccounts() {
+        return numberOfAccounts;
     }
 
-    public void setNumber_of_accounts(Integer number_of_accounts) {
-        this.number_of_accounts = number_of_accounts;
+    public void setNumberOfAccounts(Integer number_of_accounts) {
+        this.numberOfAccounts = number_of_accounts;
     }
 
     public Long getId() {

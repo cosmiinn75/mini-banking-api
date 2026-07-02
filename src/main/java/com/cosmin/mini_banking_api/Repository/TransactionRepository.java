@@ -3,6 +3,8 @@ package com.cosmin.mini_banking_api.Repository;
 import com.cosmin.mini_banking_api.Enum.TransactionType;
 import com.cosmin.mini_banking_api.Model.BankAccount;
 import com.cosmin.mini_banking_api.Model.Transaction;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +15,6 @@ import java.util.List;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction,Long> {
-    List<Transaction> findByBankAccountOrderByCreatedAtDesc(BankAccount account);
 
     @Query("""
     SELECT t 
@@ -23,9 +24,10 @@ public interface TransactionRepository extends JpaRepository<Transaction,Long> {
     AND(:minAmount IS NULL OR t.amount >= :minAmount)
     ORDER BY t.createdAt DESC
 """)
-    List<Transaction> findFilteredTransactions(
+    Page<Transaction> findFilteredTransactions(
             @Param("account") BankAccount account,
             @Param("type") TransactionType type,
-            @Param("minAmount")BigDecimal minAmount
+            @Param("minAmount")BigDecimal minAmount,
+            Pageable pageable
             );
 }

@@ -12,13 +12,16 @@ import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
 import com.cosmin.mini_banking_api.Repository.TransactionRepository;
 import com.cosmin.mini_banking_api.Model.User;
 
-import jakarta.persistence.criteria.CriteriaBuilder;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -53,7 +56,7 @@ public class TransactionServiceTest {
     void deposit_shouldReturnDepositResponse(){
         mockAuthenticatedUser("cosmin");
         User currentUser = new User();
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
         currentUser.setRole(Role.CUSTOMER);
         currentUser.setUsername("cosmin");
 
@@ -160,80 +163,90 @@ public class TransactionServiceTest {
         verify(transactionRepository,never()).save(any(Transaction.class));
     }
 
-//
-//    @Test
-//    void getTransactions_shouldReturnTransactionsForAccount() {
-//        mockAuthenticatedUser("cosmin");
-//
-//        Integer accountNumber = 1;
-//
-//        BankAccount account = new BankAccount();
-//        account.setAccountNumber(1);
-//        account.setBalance(BigDecimal.ZERO);
-//        account.setName("Main");
-//
-//        when(accountRepository.findByUserUsernameAndAccountNumber("cosmin", accountNumber))
-//                .thenReturn(Optional.of(account));
-//
-//        LocalDateTime time1 = LocalDateTime.of(2026, 6, 26, 10, 0);
-//        LocalDateTime time2 = LocalDateTime.of(2026, 6, 26, 11, 0);
-//
-//        Transaction transaction1 = new Transaction();
-//        transaction1.setBankAccount(account);
-//        transaction1.setTransactionType(TransactionType.DEPOSIT);
-//        transaction1.setCreatedAt(time1);
-//        transaction1.setId(1L);
-//        transaction1.setAmount(BigDecimal.ONE);
-//
-//        Transaction transaction2 = new Transaction();
-//        transaction2.setBankAccount(account);
-//        transaction2.setTransactionType(TransactionType.WITHDRAWAL);
-//        transaction2.setCreatedAt(time2);
-//        transaction2.setId(2L);
-//        transaction2.setAmount(BigDecimal.valueOf(100));
-//
-//        when(transactionRepository.findByBankAccountOrderByCreatedAtDesc(account))
-//                .thenReturn(List.of(transaction1, transaction2));
-//
-//        List<TransactionResponse> response = transactionService.getAllTransactions(accountNumber);
-//
-//        assertEquals(2, response.size());
-//
-//
-//        assertEquals(1, response.get(0).account_number());
-//        assertEquals("Main", response.get(0).accountName());
-//        assertEquals(TransactionType.DEPOSIT, response.get(0).transactionType());
-//        assertEquals(BigDecimal.ONE, response.get(0).amount());
-//        assertEquals(time1, response.get(0).createdAt());
-//
-//
-//        assertEquals(1, response.get(1).account_number());
-//        assertEquals("Main", response.get(1).accountName());
-//        assertEquals(TransactionType.WITHDRAWAL, response.get(1).transactionType());
-//        assertEquals(BigDecimal.valueOf(100), response.get(1).amount());
-//        assertEquals(time2, response.get(1).createdAt());
-//
-//        verify(accountRepository).findByUserUsernameAndAccountNumber("cosmin", accountNumber);
-//        verify(transactionRepository).findByBankAccountOrderByCreatedAtDesc(account);
-//    }
-//
-//    @Test
-//    void getTransactions_shouldThrowException_whenAccountDoesNotExist() {
-//        mockAuthenticatedUser("cosmin");
-//
-//        Integer accountNumber = 1;
-//
-//        when(accountRepository.findByUserUsernameAndAccountNumber("cosmin", accountNumber))
-//                .thenReturn(Optional.empty());
-//
-//        assertThrows(AccountNotFoundException.class,
-//                () -> transactionService.getAllTransactions(accountNumber));
-//
-//        verify(accountRepository)
-//                .findByUserUsernameAndAccountNumber("cosmin", accountNumber);
-//
-//        verifyNoInteractions(transactionRepository);
-//    }
+
+    @Test
+    void getTransactions_shouldReturnTransactionsForAccount() {
+        mockAuthenticatedUser("cosmin");
+
+        Integer accountNumber = 1;
+
+        BankAccount account = new BankAccount();
+        account.setAccountNumber(1);
+        account.setBalance(BigDecimal.ZERO);
+        account.setName("Main");
+
+        when(accountRepository.findByUserUsernameAndAccountNumber("cosmin", accountNumber))
+                .thenReturn(Optional.of(account));
+
+        LocalDateTime time1 = LocalDateTime.of(2026, 6, 26, 10, 0);
+        LocalDateTime time2 = LocalDateTime.of(2026, 6, 26, 11, 0);
+
+        Transaction transaction1 = new Transaction();
+        transaction1.setBankAccount(account);
+        transaction1.setTransactionType(TransactionType.DEPOSIT);
+        transaction1.setCreatedAt(time1);
+        transaction1.setId(1L);
+        transaction1.setAmount(BigDecimal.ONE);
+
+        Transaction transaction2 = new Transaction();
+        transaction2.setBankAccount(account);
+        transaction2.setTransactionType(TransactionType.WITHDRAWAL);
+        transaction2.setCreatedAt(time2);
+        transaction2.setId(2L);
+        transaction2.setAmount(BigDecimal.valueOf(100));
+
+        Pageable pageable = PageRequest.of(0,20);
+        Page<Transaction> pages = new PageImpl<>(
+                List.of(transaction1,transaction2),
+                pageable,
+                2
+        );
+
+        when(transactionRepository.findFilteredTransactions(account,TransactionType.TRANSFER_IN , BigDecimal.ZERO , pageable))
+                .thenReturn(pages);
+
+        Page<TransactionResponse> response = transactionService.getAllTransactions(accountNumber,TransactionType.TRANSFER_IN ,BigDecimal.ZERO , 0,20);
+
+        TransactionResponse first = response.getContent().get(0);
+        TransactionResponse second = response.getContent().get(1);
+
+        assertEquals(2, response.getContent().size());
+
+
+        assertEquals(1, first.accountNumber());
+        assertEquals("Main", first.accountName());
+        assertEquals(TransactionType.DEPOSIT, first.transactionType());
+        assertEquals(BigDecimal.ONE, first.amount());
+        assertEquals(time1, first.createdAt());
+
+
+        assertEquals(1, second.accountNumber());
+        assertEquals("Main", second.accountName());
+        assertEquals(TransactionType.WITHDRAWAL, second.transactionType());
+        assertEquals(BigDecimal.valueOf(100),second.amount());
+        assertEquals(time2, second.createdAt());
+
+        verify(accountRepository).findByUserUsernameAndAccountNumber("cosmin", accountNumber);
+        verify(transactionRepository).findFilteredTransactions(account,TransactionType.TRANSFER_IN,BigDecimal.ZERO,pageable);
+    }
+
+    @Test
+    void getTransactions_shouldThrowException_whenAccountDoesNotExist() {
+        mockAuthenticatedUser("cosmin");
+
+        Integer accountNumber = 1;
+
+        when(accountRepository.findByUserUsernameAndAccountNumber("cosmin", accountNumber))
+                .thenReturn(Optional.empty());
+
+        assertThrows(AccountNotFoundException.class,
+                () -> transactionService.getAllTransactions(accountNumber,TransactionType.TRANSFER_IN,BigDecimal.ZERO,0,20));
+
+        verify(accountRepository)
+                .findByUserUsernameAndAccountNumber("cosmin", accountNumber);
+
+        verifyNoInteractions(transactionRepository);
+    }
 
     @Test
     void transfer_shouldMoveMoneyAndReturnTransferResponse(){
@@ -242,13 +255,13 @@ public class TransactionServiceTest {
         User currentUser = new User();
         currentUser.setId(1L);
         currentUser.setUsername("cosmin");
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
         currentUser.setRole(Role.CUSTOMER);
 
         User toUser = new User();
         toUser.setId(2L);
         toUser.setUsername("ionut");
-        toUser.setNumber_of_accounts(2);
+        toUser.setNumberOfAccounts(2);
         toUser.setRole(Role.CUSTOMER);
 
         TransferRequest request = new TransferRequest(
@@ -343,7 +356,7 @@ public class TransactionServiceTest {
         User currentUser = new User();
         currentUser.setId(1L);
         currentUser.setUsername("cosmin");
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
         currentUser.setRole(Role.CUSTOMER);
 
         TransferRequest request = new TransferRequest(
@@ -390,7 +403,7 @@ public class TransactionServiceTest {
         User currentUser = new User();
         currentUser.setId(1L);
         currentUser.setUsername("cosmin");
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
         currentUser.setRole(Role.CUSTOMER);
 
         TransferRequest request = new TransferRequest(
@@ -430,13 +443,13 @@ public class TransactionServiceTest {
         User currentUser = new User();
         currentUser.setId(1L);
         currentUser.setUsername("cosmin");
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
         currentUser.setRole(Role.CUSTOMER);
 
         User toUser = new User();
         toUser.setId(2L);
         toUser.setUsername("ionut");
-        toUser.setNumber_of_accounts(1);
+        toUser.setNumberOfAccounts(1);
         toUser.setRole(Role.CUSTOMER);
 
         TransferRequest request = new TransferRequest(

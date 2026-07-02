@@ -65,7 +65,7 @@ public class AuthServiceTest {
         savedUser.setEmail("cosmin@gmail.com");
         savedUser.setPassword("encodedPassword");
         savedUser.setRole(Role.CUSTOMER);
-        savedUser.setNumber_of_accounts(1);
+        savedUser.setNumberOfAccounts(1);
 
         when(userRepository.save(any(User.class)))
                 .thenReturn(savedUser);

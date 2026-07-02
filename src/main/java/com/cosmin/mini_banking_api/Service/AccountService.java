@@ -1,20 +1,23 @@
 package com.cosmin.mini_banking_api.Service;
 
-import com.cosmin.mini_banking_api.Dto.DeleteResponse;
-import com.cosmin.mini_banking_api.Dto.UpdateRequest;
+import com.cosmin.mini_banking_api.Dto.*;
 import com.cosmin.mini_banking_api.Exception.*;
 import com.cosmin.mini_banking_api.Model.BankAccount;
 import com.cosmin.mini_banking_api.Repository.BankAccountRepository;
-import com.cosmin.mini_banking_api.Dto.AccountRequest;
-import com.cosmin.mini_banking_api.Dto.AccountResponse;
 import com.cosmin.mini_banking_api.Model.User;
 import com.cosmin.mini_banking_api.Repository.UserRepository;
 import jakarta.transaction.Transactional;
+
+
+
+
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 @Service
 public class AccountService {
@@ -27,11 +30,15 @@ public class AccountService {
     }
 
 
-    public List<AccountResponse> getAllAccounts(){
-        return accountRepository.getAllByUserUsername(getCurrentUsername())
-                .stream()
-                .map(this::fromAccountToResponse)
-                .toList();
+    public PagedResponse<AccountResponse> getAllAccountsFiltered(BigDecimal minBalance , Integer page , Integer size){
+
+        Pageable pageable = PageRequest.of(page,size);
+
+       Page<AccountResponse> pages = accountRepository.findFilteredAccount(pageable,getCurrentUsername(),minBalance)
+                .map(this::fromAccountToResponse);
+
+       return PagedResponse.from(pages);
+
     }
 
     public AccountResponse getAccount(Integer account_number){
@@ -57,7 +64,7 @@ public class AccountService {
             throw new AccountNameAlreadyExistsException("Account name already exists");
         }
 
-        Integer number_of_accounts = currentUser.getNumber_of_accounts();
+        Integer number_of_accounts = currentUser.getNumberOfAccounts();
 
         BankAccount account = new BankAccount();
         account.setBalance(BigDecimal.ZERO);
@@ -66,7 +73,7 @@ public class AccountService {
         account.setAccountNumber(number_of_accounts+1);
         account.setActive(true);
 
-        currentUser.setNumber_of_accounts(number_of_accounts+1);
+        currentUser.setNumberOfAccounts(number_of_accounts+1);
 
         userRepository.save(currentUser);
 

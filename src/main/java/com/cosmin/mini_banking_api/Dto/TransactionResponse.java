@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public record TransactionResponse(
-        Integer account_number,
+        Integer accountNumber,
         String accountName,
         TransactionType transactionType,
         BigDecimal amount,

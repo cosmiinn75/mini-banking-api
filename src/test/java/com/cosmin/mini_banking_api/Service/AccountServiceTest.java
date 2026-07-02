@@ -16,8 +16,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -58,7 +63,7 @@ public class AccountServiceTest {
         currentUser.setId(1L);
         currentUser.setPassword("parola");
         currentUser.setUsername("cosmin");
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
 
         when(userRepository.findByUsername("cosmin")).thenReturn(Optional.of(currentUser));
 
@@ -81,7 +86,7 @@ public class AccountServiceTest {
         mockAuthenticatedUser("cosmin");
         AccountRequest request = new AccountRequest("Savings");
         User currentUser = new User();
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
         currentUser.setUsername("cosmin");
 
         when(userRepository.findByUsername("cosmin")).thenReturn(Optional.of(currentUser));
@@ -113,10 +118,13 @@ public class AccountServiceTest {
     @Test
     void getAllAccounts_shouldReturnAccountsForAuthenticatedUser(){
 
+
+
+
         mockAuthenticatedUser("cosmin");
         User currentUser = new User();
         currentUser.setRole(Role.CUSTOMER);
-        currentUser.setNumber_of_accounts(2);
+        currentUser.setNumberOfAccounts(2);
         currentUser.setUsername("cosmin");
         currentUser.setId(1L);
 
@@ -131,26 +139,34 @@ public class AccountServiceTest {
         bankAccount2.setAccountNumber(2);
         bankAccount2.setUser(currentUser);
         bankAccount2.setBalance(BigDecimal.ZERO);
-
-        when(accountRepository.getAllByUserUsername("cosmin")).thenReturn(
-                List.of(bankAccount1,bankAccount2)
+        Pageable pageable = PageRequest.of(0,20);
+        Page<BankAccount> accountPage = new PageImpl<>(
+                List.of(bankAccount1,bankAccount2),
+                pageable,
+                2
+        );
+        when(accountRepository.findFilteredAccount(pageable,"cosmin" , BigDecimal.ZERO)).thenReturn(
+            accountPage
         );
 
-    List<AccountResponse> responses = accountService.getAllAccounts();
 
-        assertEquals(2,responses.size());
+    Page<AccountResponse> responses = accountService.getAllAccountsFiltered(BigDecimal.ZERO,0,20);
 
-        assertEquals("cosmin", responses.get(0).username());
-        assertEquals(1, responses.get(0).accountNumber());
-        assertEquals("Main", responses.get(0).name());
-        assertEquals(BigDecimal.valueOf(100), responses.get(0).balance());
+    AccountResponse first = responses.getContent().get(0);
+    AccountResponse second = responses.getContent().get(1);
+        assertEquals(2,responses.getContent().size());
 
-        assertEquals("cosmin", responses.get(1).username());
-        assertEquals(2, responses.get(1).accountNumber());
-        assertEquals("Savings", responses.get(1).name());
-        assertEquals(BigDecimal.ZERO, responses.get(1).balance());
+        assertEquals("cosmin", first.username());
+        assertEquals(1, first.accountNumber());
+        assertEquals("Main", first.name());
+        assertEquals(BigDecimal.valueOf(100), first.balance());
 
-        verify(accountRepository).getAllByUserUsername("cosmin");
+        assertEquals("cosmin", second.username());
+        assertEquals(2, second.accountNumber());
+        assertEquals("Savings", second.name());
+        assertEquals(BigDecimal.ZERO, second.balance());
+
+        verify(accountRepository).findFilteredAccount(pageable,"cosmin" ,BigDecimal.ZERO);
     }
 
 
@@ -163,7 +179,7 @@ public class AccountServiceTest {
         currentUser.setId(1L);
         currentUser.setUsername("cosmin");
         currentUser.setRole(Role.CUSTOMER);
-        currentUser.setNumber_of_accounts(1);
+        currentUser.setNumberOfAccounts(1);
 
         BankAccount account = new BankAccount();
         account.setAccountNumber(accountNumber);
